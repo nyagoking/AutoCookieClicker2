@@ -20,8 +20,36 @@ while (1) {
 my $locator_import = '//a[text()="Import save"]';
 &to_menu_and_click($locator_import, "import");
 
+my $locator_textarea_prompt = 'id("textareaPrompt")';
+my $locator_prompt_option0 = 'id("promptOption0")';
 
+while ( 1 ) {
+    my $textarea_prompt;
+    my $prompt_option0;
 
+    next if ( !($textarea_prompt = &is_enabled($locator_textarea_prompt)) );
+    next if ( !($prompt_option0 = &is_enabled($locator_prompt_option0)) );
+
+    my $text = &get_text($textarea_prompt);
+    my $btnText = &get_text($prompt_option0);
+
+    next if ( $text ne '' );
+    next if ( $btnText ne 'Load' );
+
+    open(my $fh, "<", "savedata.txt") or die $!;
+    while ( defined(my $l = <$fh>) ) {
+        chomp $l;
+        if ( $l ne '' ) {
+            $savedata = $l;
+        }
+    }
+    close $fh;
+
+    $textarea_prompt->send_keys($savedata);
+    &click($prompt_option0);
+    sleep 2;
+    last;
+}
 
 exit;
 
@@ -47,10 +75,7 @@ sub is_enabled {
     
     try {
         $elem = $sel->find_element_by_xpath($locator);
-        my $is_enabled = $elem->is_enabled();
-        if (!$is_enabled) {
-            $elem = 0;
-        }
+        $elem = 0 if ( !$elem->is_enabled() );
     } catch {
         $elem = 0;
     };
@@ -72,7 +97,19 @@ sub click {
     return $rtn;
 }
 
+sub get_text {
+    my $target = shift;
+    my $text;
 
+    while ( !defined($text) ) {
+        try {
+            $text = $target->get_text();
+        } catch {
+            print "\nERROR(get_text): $_";
+        };
+    }
+    return $text;
+}
 
 
 # $|=1;
