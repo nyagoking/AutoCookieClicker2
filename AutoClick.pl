@@ -31,22 +31,30 @@ sub to_menu_and_click {
     my $target_name = shift;
     my $locator_menu_button = '//div[@id="prefsButton"]';
     my $target = 0;
+    my $menu_button;
 
-    print "debug_00\n";
     while ($target == 0) {
-        print "debug_01\n";
-        last if ($target = &is_present($locator));
-        print "debug_02\n";
-        &click($locator_menu_button, "menu");
+        last if ($target = &is_enabled($locator));
+        next if (!($menu_button = &is_enabled($locator_menu_button)));
+        &click($menu_button, "menu");
     }
-    print "target: $target\n";
-    print "debug_03\n";
     &click($target, $target_name);
 }
 
-sub is_present {
+sub is_enabled {
     my $locator = shift;
-    return $sel->find_element_by_xpath($locator);
+    my $elem;
+    
+    try {
+        $elem = $sel->find_element_by_xpath($locator);
+        my $is_enabled = $elem->is_enabled();
+        if (!$is_enabled) {
+            $elem = 0;
+        }
+    } catch {
+        $elem = 0;
+    };
+    return $elem;
 }
 
 sub click {
@@ -54,19 +62,13 @@ sub click {
     my $target_name = shift;
     my $rtn;
 
-    print "debug_10\n";
     try {
-        print "debug_11\n";
-        print $target . "\n";
         $target->click();
-        print "debug_12\n";
         print "\nclick $target_name" if ( $target_name );
         $rtn = 1;
     } catch {
-        print "debug_13\n";
         $rtn = 0;
     };
-    print "debug_14\n";
     return $rtn;
 }
 

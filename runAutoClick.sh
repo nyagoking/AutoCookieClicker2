@@ -1,0 +1,2 @@
+perl AutoClick.pl
+pause
