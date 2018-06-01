@@ -66,13 +66,15 @@ sub buy_upgrade {
 }
 
 sub buy_product {
-    my $locator = '//div[@id="products"]/div[@class="product unlocked enabled"][last()]';
+    my $locator = '//div[@id="products" and not(contains(@class, "selling"))]/div[@class="product unlocked enabled"][last()]';
     &click($locator, "product");
 }
 
 sub click_grimoire {
-    my $locator = '//div[@id="grimoireSpell1" and contains(@class, "ready")]';
-    &click($locator, "grimoireSpell1");
+    if ( $sel->execute_script("return window.Game.buffs.Frenzy ? 1 : 0") ) {
+        my $locator = '//div[@id="grimoireSpell1" and contains(@class, "ready")]';
+        &click($locator, "grimoireSpell1");
+    }
 }
 
 sub explode_wrinklers {
@@ -87,7 +89,7 @@ sub click {
         my @elems;
         my $loop;
         try {
-            @elems = $sel->find_elements($target);
+            @elems = grep { $_->is_displayed() } $sel->find_elements($target);
         } catch {
             @elems = ();
         };
@@ -109,6 +111,7 @@ sub click {
             };
             last if (!$loop);
         }
+        last if ( !$cnt );
         print "+";
     }
     if ( $cnt && $target_name ) {
